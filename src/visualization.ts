@@ -11,6 +11,8 @@ import {
 import { scaleOrdinal } from "d3-scale";
 import { schemeTableau10 } from "d3-scale-chromatic";
 
+declare const acquireVsCodeApi: () => { postMessage(message: any): void };
+
 export interface Node extends SimulationNodeDatum {
   path: string;
   size: number;
@@ -28,11 +30,8 @@ interface Options {
 }
 
 const chart = (options: Options) => {
-  const { container } = options;
-  const colorScale = scaleOrdinal(schemeTableau10);
-
-  const width = container.offsetWidth;
-  const height = container.offsetHeight;
+  const width = 800;
+  const height = 600;
 
   const svg = selection
     .select(container)
@@ -95,14 +94,22 @@ const chart = (options: Options) => {
     .on("tick", handleTicked);
 
   const setData = (graph: GraphData) => {
-    const nodes = graph.nodes.map(d => Object.create(d));
+    const colorScale = scaleOrdinal(schemeTableau10);
+    const nodes = graph.nodes.map<Node>(d => Object.create(d));
     const links = graph.links.map(d => Object.create(d));
+    const { container } = options;
+    const width = container.offsetWidth;
+    const height = container.offsetHeight;
+
+    svg
+      .attr('width', width)
+      .attr('height', height);
 
     node = node.data<Node>(nodes).join(
       enter => {
         const circle = enter
           .append("circle")
-          .attr("r", d => d.size)
+          .attr("r", 10)
           .attr("stroke", "white")
           .attr("stroke-width", 2)
           .attr("fill", d => colorScale(d.path));
@@ -133,13 +140,31 @@ const chart = (options: Options) => {
   return [setData, setOptions, dispose];
 };
 
+
 const container = document.querySelector('#chart') as HTMLDivElement | undefined;
 
 if (container) {
+  const vscode = acquireVsCodeApi();
   const [setData] = chart({ container });
+  const oldGraph: GraphData = { nodes: [], links: [] };
 
   window.addEventListener('message', (ev) => {
-    const graphData = ev.data as GraphData;
-    setData(graphData);
+    try {
+      const message = ev.data as { type: string, payload: GraphData };
+      if (message.type !== 'data')  {
+        return;
+      }
+
+      setData(Object.assign(oldGraph, message.payload));
+    } catch (e) {
+      console.error(e);
+    }
   });
+
+  window.addEventListener('resize', () => {
+    console.log('resize');
+    setData(oldGraph);
+  });
+
+  vscode.postMessage({ type: 'notify', payload: 'ready' });
 }

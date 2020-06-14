@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { TopologyPanel } from './TopologyPanel';
+import { fileWalker } from './fileWalker';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -20,10 +21,11 @@ export function activate(context: vscode.ExtensionContext) {
 		// Display a message box to the user
 		// vscode.window.showInformationMessage('dependency analyze completed');
 
-		const panel = new TopologyPanel(context);
-		panel.setGraphData({nodes: [], links: []});
+		const fileDescList = fileWalker(context.extensionPath, { ignore: /node_modules|^\..+/gim });
+		const panel = TopologyPanel.getInstance(context);
 
-		// panel.webview.postMessage({ type: 'action', text: 'Hello' });
+		panel.setGraphData({ nodes: fileDescList, links: []});
+
 		vscode.window.showInformationMessage('dependency analyze completed');
 	});
 
