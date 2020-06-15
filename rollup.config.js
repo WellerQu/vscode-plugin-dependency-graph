@@ -4,10 +4,10 @@ import typescript from 'rollup-plugin-typescript';
 
 export default [
   {
-    input: 'src/visualization.ts',
+    input: 'src/webview/visualization.ts',
     output: {
       name: 'visualization',
-      file: 'out/visualization.js',
+      file: 'out/webview/visualization.js',
       format: 'umd'
     },
     plugins: [
