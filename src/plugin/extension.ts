@@ -1,14 +1,31 @@
 import * as vscode from 'vscode';
+
 import { TopologyPanel } from './TopologyPanel';
+
 import { fileWalker } from './fileWalker';
+import { fileAnalyzer } from './analyzer';
+
+import { scriptLoader } from './loaders/script/scriptLoader';
+
+// 默认遍历目录最大深度
+const MAX_DEP = 6;
 
 export function activate(context: vscode.ExtensionContext) {
+	const analyzer = fileAnalyzer([scriptLoader]);
 
 	const disposable = vscode.commands.registerCommand('extension.dependency-analyze', () => {
-		const fileDescList = fileWalker(context.extensionPath, { ignore: /node_modules|^\..+/gim });
+		if (!vscode.workspace.rootPath) {
+			return;
+		}
+
+		const fileDescList = fileWalker(vscode.workspace.rootPath, { ignore: /node_modules|^\..+/gim, dep: MAX_DEP });
+		const fileRelationList = analyzer(fileDescList);
 		const panel = TopologyPanel.getInstance(context);
 
-		panel.setGraphData({ nodes: fileDescList, links: []});
+		console.log(fileDescList);
+		console.log(fileRelationList);
+
+		panel.setGraphData({ nodes: fileDescList, links: fileRelationList});
 
 		vscode.window.showInformationMessage('dependency analyze completed');
 	});

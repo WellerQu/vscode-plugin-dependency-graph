@@ -7,9 +7,13 @@ export interface FileRelation {
 
 export interface FileLoader {
   test: RegExp,
-  analyze: () => FileRelation[]
+  analyze: (fullName: string) => FileRelation[]
 }
 
-export default (loaders: FileLoader[]) => (fileDescList: FileDesc[]): FileRelation[] => {
-  return [];
+export const fileAnalyzer = (loaders: FileLoader[]) => (fileDescList: FileDesc[]): FileRelation[] => {
+  return fileDescList.reduce<FileRelation[]>((cum, cur) => {
+    const analyzer = loaders.find(item => cur.path.match(item.test));
+    const relations = analyzer?.analyze(cur.path);
+    return cum.concat(relations ?? []);
+  }, []);
 };
