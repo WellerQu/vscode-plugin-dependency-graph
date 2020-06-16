@@ -5,7 +5,6 @@ import { FileDesc } from './fileWalker';
 export class TopologyPanel extends Panel {
   private panel: vscode.WebviewPanel;
   private static instance: TopologyPanel | undefined;
-  public static readonly viewType = 'topology panel';
 
   private constructor(private context: vscode.ExtensionContext) {
     super();

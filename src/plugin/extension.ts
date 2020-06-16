@@ -14,11 +14,12 @@ export function activate(context: vscode.ExtensionContext) {
 	const analyzer = fileAnalyzer([scriptLoader]);
 
 	const disposable = vscode.commands.registerCommand('extension.dependency-analyze', () => {
-		if (!vscode.workspace.rootPath) {
+		const rootPath = vscode.workspace.workspaceFolders;
+		if (!rootPath || rootPath.length < 1) {
 			return;
 		}
 
-		const fileDescList = fileWalker(vscode.workspace.rootPath, { ignore: /node_modules|^\..+/gim, dep: MAX_DEP });
+		const fileDescList = fileWalker(rootPath[0].uri.path, { ignore: /node_modules|^\..+/gim, dep: MAX_DEP });
 		const fileRelationList = analyzer(fileDescList);
 		const panel = TopologyPanel.getInstance(context);
 

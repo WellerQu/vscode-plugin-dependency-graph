@@ -10,6 +10,7 @@ import {
 } from "d3-force";
 import { scaleOrdinal } from "d3-scale";
 import { schemeTableau10 } from "d3-scale-chromatic";
+import { zoom, zoomIdentity } from 'd3-zoom';
 
 declare const acquireVsCodeApi: () => { postMessage(message: any): void };
 
@@ -27,11 +28,24 @@ export interface GraphData {
 
 interface Options {
   container: HTMLDivElement;
+  invalidationTimeout?: number
 }
 
 const chart = (options: Options) => {
   const width = 800;
   const height = 600;
+
+  const handleZoomed = () => {
+    selection
+      .select(container)
+      .select("svg")
+      .select("g.root")
+      .attr("transform", selection.event.transform);
+  };
+
+  const svgZoom = zoom()
+    .scaleExtent([0.5, 32])
+    .on("zoom", handleZoomed);
 
   const svg = selection
     .select(container)
@@ -41,7 +55,9 @@ const chart = (options: Options) => {
       const svg = enter
         .append("svg")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .call(svgZoom)
+        .call(svgZoom.transform, zoomIdentity);
 
       svg
         .append("defs")
@@ -54,9 +70,10 @@ const chart = (options: Options) => {
         .attr("markerHeight", 6)
         .attr("orient", "auto")
         .append("path")
+        .attr('fill', '#bababa')
         .attr("d", "M 0 0 L 10 5 L 0 10 z");
 
-      return svg;
+      return svg.append('g').attr('class', 'root');
     });
 
   let link = svg
@@ -68,6 +85,8 @@ const chart = (options: Options) => {
     .append("g")
     .attr("class", "nodes")
     .selectAll<SVGCircleElement, Node>("circle");
+
+  let invalidation = 0;
 
   const handleTicked = () => {
     node
@@ -88,7 +107,7 @@ const chart = (options: Options) => {
   };
 
   const simulation = forceSimulation()
-    .force("charge", forceManyBody().strength(-1000).distanceMax(300))
+    .force("charge", forceManyBody().strength(-1000).distanceMax(100))
     .force("link", forceLink<Node, Link>().id(d => d.path))
     .force("center", forceCenter(width / 2, height / 2))
     .on("tick", handleTicked);
@@ -101,7 +120,9 @@ const chart = (options: Options) => {
     const width = container.offsetWidth;
     const height = container.offsetHeight;
 
-    svg
+    selection
+      .select(container)
+      .select('svg')
       .attr('width', width)
       .attr('height', height);
 
@@ -131,11 +152,17 @@ const chart = (options: Options) => {
     simulation.nodes(nodes);
     simulation.force<ForceLink<Node, Link>>("link")!.links(links);
     simulation.alpha(1).restart();
+
+    window.clearTimeout(invalidation);
+    invalidation = window.setTimeout(() => simulation.stop(), options.invalidationTimeout ?? 6000);
   };
 
   const setOptions = () => { };
 
-  const dispose = () => { };
+  const dispose = () => { 
+    window.clearTimeout(invalidation);
+    simulation.stop();
+  };
 
   return [setData, setOptions, dispose];
 };
@@ -162,7 +189,6 @@ if (container) {
   });
 
   window.addEventListener('resize', () => {
-    console.log('resize');
     setData(oldGraph);
   });
 
