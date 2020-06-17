@@ -10,7 +10,7 @@ import {
 } from "d3-force";
 import { scaleOrdinal } from "d3-scale";
 import { schemeTableau10 } from "d3-scale-chromatic";
-import { zoom, zoomIdentity } from 'd3-zoom';
+import { zoom, zoomIdentity } from "d3-zoom";
 
 // eslint-disable-next-line
 interface vscode {
@@ -24,6 +24,7 @@ declare const acquireVsCodeApi: () => vscode;
 export interface Node extends SimulationNodeDatum {
   path: string;
   size: number;
+  ext: string;
 }
 
 export interface Link extends SimulationLinkDatum<Node> { }
@@ -77,10 +78,10 @@ const chart = (options: Options) => {
         .attr("markerHeight", 6)
         .attr("orient", "auto")
         .append("path")
-        .attr('fill', '#bababa')
+        .attr("fill", "#bababa")
         .attr("d", "M 0 0 L 10 5 L 0 10 z");
 
-      return svg.append('g').attr('class', 'root');
+      return svg.append("g").attr("class", "root");
     });
 
   let link = svg
@@ -91,13 +92,24 @@ const chart = (options: Options) => {
   let node = svg
     .append("g")
     .attr("class", "nodes")
-    .selectAll<SVGGElement, Node>('g.node');
+    .selectAll<SVGGElement, Node>("g.node");
+
+  let legend = selection.select(container)
+    .append("div")
+    .attr("class", "legend")
+    .style("position", "absolute")
+    .style("width", "100px")
+    .style("padding", "8px")
+    .style("background-color", "rgba(0, 0, 0, 0.2)")
+    .style("top", "24px")
+    .style("right", "16px")
+    .selectAll<HTMLDivElement, {}>("div");
 
   let invalidation = 0;
 
   const handleTicked = () => {
     node
-      .attr('transform', d => `translate(${[d.x, d.y].join(',')})`);
+      .attr("transform", d => `translate(${[d.x, d.y].join(",")})`);
 
     link.attr("points", d => {
       const nodeSource = d.source as Node;
@@ -119,40 +131,63 @@ const chart = (options: Options) => {
     .on("tick", handleTicked);
 
   const setData = (graph: GraphData) => {
-    const colorScale = scaleOrdinal(schemeTableau10);
     const nodes = graph.nodes.map<Node>(d => Object.create(d));
     const links = graph.links.map(d => Object.create(d));
     const { container } = options;
     const width = container.offsetWidth;
     const height = container.offsetHeight;
+    const extname = Array.from(new Set(nodes.map(item => item.ext)));
+    const colorScale = scaleOrdinal<string>().domain(extname).range(schemeTableau10);
 
     selection
       .select(container)
-      .select('svg')
-      .attr('width', width)
-      .attr('height', height);
+      .select("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    legend = legend.data<string>(extname).join(
+      enter => {
+        const group = enter
+          .append("div")
+          .style('line-height', 1.4)
+          .style("display", "flex")
+          .style("align-items", "center");
+        group
+          .append("span")
+          .style("display", "block")
+          .style("width", "8px")
+          .style("height", "8px")
+          .style("margin-right", "8px")
+          .style('border-radius', '50%')
+          .style("background-color", d => colorScale(d));
+        group
+          .append("span")
+          .text(d => d);
+        return group;
+      }
+    );
 
     node = node.data<Node>(nodes).join(
       enter => {
-        const group = enter.append('g').attr('class', 'node');
+        const group = enter.append("g").attr("class", "node");
         group
           .append("circle")
           .attr("r", 10)
           .attr("stroke", "white")
           .attr("stroke-width", 2)
-          .attr("fill", d => colorScale(d.path));
+          .attr("fill", d => colorScale(d.ext));
         group
-          .append('title')
+          .append("title")
           .text(d => d.path);
         group
-          .append('text')
-          .attr('x', 0)
-          .attr('y', 26)
-          .attr('fill', 'white')
-          .attr('text-anchor', 'middle')
-          .attr('dominant-baseline', 'middle')
-          .attr('opacity', 0.6)
-          .text(d => d.path.split('/').slice(-1)[0]);
+          .append("text")
+          .attr("x", 0)
+          .attr("y", 26)
+          .attr("fill", "white")
+          .attr("text-anchor", "middle")
+          .attr("dominant-baseline", "middle")
+          .attr("opacity", 0.6)
+          .text(d => d.path.split("/").slice(-1)[0]);
         return group;
       },
       update => update.attr("fill", d => colorScale(d.path)),
@@ -187,17 +222,17 @@ const chart = (options: Options) => {
 };
 
 
-const container = document.querySelector('#chart') as HTMLDivElement | undefined;
+const container = document.querySelector("#chart") as HTMLDivElement | undefined;
 
 if (container) {
   const vscode = acquireVsCodeApi();
   const [setData] = chart({ container });
   const oldGraph: GraphData = vscode.getState() ?? { nodes: [], links: [] };
 
-  window.addEventListener('message', (ev) => {
+  window.addEventListener("message", (ev) => {
     try {
       const message = ev.data as { type: string, payload: GraphData };
-      if (message.type !== 'data')  {
+      if (message.type !== "data")  {
         return;
       }
 
@@ -210,9 +245,9 @@ if (container) {
     }
   });
 
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     setData(oldGraph);
   });
 
-  vscode.postMessage({ type: 'notify', payload: 'ready' });
+  vscode.postMessage({ type: "notify", payload: "ready" });
 }

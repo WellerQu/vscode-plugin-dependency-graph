@@ -4,6 +4,7 @@ import * as path from 'path';
 export interface FileDesc {
   path: string;
   size: number;
+  ext: string;
 }
 
 export interface WalkerOptions {
@@ -33,7 +34,7 @@ export const fileWalker = (dirname: string, options?: WalkerOptions): FileDesc[]
 
   const stat = fs.statSync(dirname);
   if (!stat.isDirectory())  {
-    return [{ path: dirname, size: stat.size }];
+    return [{ path: dirname, size: stat.size, ext: path.extname(dirname) }];
   }
 
   const filenames = fs.readdirSync(dirname)
