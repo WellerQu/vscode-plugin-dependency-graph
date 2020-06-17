@@ -5,13 +5,18 @@ import * as path from 'path';
 const fillOptions = ['.ts', '.d.ts', '/index.ts'];
 
 export const scriptLoader: FileLoader = {
-  test: /\.ts$/igm,
+  test: /\.tsx?$/igm,
   analyze: (fullName: string) => {
-    const relations: FileRelation[] = [];
-
-    try {
-      const content = fs.readFileSync(fullName, { encoding: 'utf-8' });
-      const regexp = /^(?!\/\/)(?:.*?(?:from |require\()['"])(?<dep>[^'"]+)/gim;
+    return new Promise<string>((resolve, reject) => {
+      fs.readFile(fullName, { encoding: 'utf-8' }, (err, content) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(content);
+      });
+    }).then(content => {
+      const relations: FileRelation[] = [];
+      const regexp = /^(?!\/\/)(?:.*?(?:from |require|import\()['"])(?<dep>[^'"]+)/gim;
 
       let matches: RegExpExecArray | null;
       while ((matches = regexp.exec(content)) !== null && matches.groups) {
@@ -36,9 +41,8 @@ export const scriptLoader: FileLoader = {
         // 第四种情况: dependency 是一个在 node_modules 中的依赖路径, 这种情况暂时忽略
         // 第五种情况: dependency 是一个 node 内置功能包
       }
-    } catch (e) {
-    }
 
-    return relations;
+      return relations;
+    });
   }
 };
