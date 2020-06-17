@@ -43,7 +43,13 @@ export class TopologyPanel extends Panel {
   }
 
   public setGraphData(datasource: { nodes: FileDesc[], links: any[] }) {
+    const columnToShowIn = vscode.window.activeTextEditor
+      ? vscode.window.activeTextEditor.viewColumn
+      : undefined;
+
+    this.panel.reveal(columnToShowIn);
     this.panel.webview.html = this.getWebViewContent(this.context, 'assets/topology.html');
+
     this.ready().then(() => {
       this.panel.webview.postMessage({ type: 'data', payload: datasource });
     });

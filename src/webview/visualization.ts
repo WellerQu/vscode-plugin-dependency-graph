@@ -12,7 +12,14 @@ import { scaleOrdinal } from "d3-scale";
 import { schemeTableau10 } from "d3-scale-chromatic";
 import { zoom, zoomIdentity } from 'd3-zoom';
 
-declare const acquireVsCodeApi: () => { postMessage(message: any): void };
+// eslint-disable-next-line
+interface vscode {
+  postMessage(message: any): void
+  setState(state: object): void
+  getState<T extends object>(): T
+}
+
+declare const acquireVsCodeApi: () => vscode;
 
 export interface Node extends SimulationNodeDatum {
   path: string;
@@ -84,14 +91,13 @@ const chart = (options: Options) => {
   let node = svg
     .append("g")
     .attr("class", "nodes")
-    .selectAll<SVGCircleElement, Node>("circle");
+    .selectAll<SVGGElement, Node>('g.node');
 
   let invalidation = 0;
 
   const handleTicked = () => {
     node
-      .attr("cx", d => d.x!)
-      .attr("cy", d => d.y!);
+      .attr('transform', d => `translate(${[d.x, d.y].join(',')})`);
 
     link.attr("points", d => {
       const nodeSource = d.source as Node;
@@ -107,7 +113,7 @@ const chart = (options: Options) => {
   };
 
   const simulation = forceSimulation()
-    .force("charge", forceManyBody().strength(-1000).distanceMax(100))
+    .force("charge", forceManyBody().strength(-800).distanceMax(200))
     .force("link", forceLink<Node, Link>().id(d => d.path))
     .force("center", forceCenter(width / 2, height / 2))
     .on("tick", handleTicked);
@@ -128,13 +134,26 @@ const chart = (options: Options) => {
 
     node = node.data<Node>(nodes).join(
       enter => {
-        const circle = enter
+        const group = enter.append('g').attr('class', 'node');
+        group
           .append("circle")
           .attr("r", 10)
           .attr("stroke", "white")
           .attr("stroke-width", 2)
           .attr("fill", d => colorScale(d.path));
-        return circle;
+        group
+          .append('title')
+          .text(d => d.path);
+        group
+          .append('text')
+          .attr('x', 0)
+          .attr('y', 26)
+          .attr('fill', 'white')
+          .attr('text-anchor', 'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('opacity', 0.6)
+          .text(d => d.path.split('/').slice(-1)[0]);
+        return group;
       },
       update => update.attr("fill", d => colorScale(d.path)),
       exit => exit.remove()
@@ -154,7 +173,7 @@ const chart = (options: Options) => {
     simulation.alpha(1).restart();
 
     window.clearTimeout(invalidation);
-    invalidation = window.setTimeout(() => simulation.stop(), options.invalidationTimeout ?? 6000);
+    invalidation = window.setTimeout(() => simulation.stop(), options.invalidationTimeout ?? 9000);
   };
 
   const setOptions = () => { };
@@ -173,7 +192,7 @@ const container = document.querySelector('#chart') as HTMLDivElement | undefined
 if (container) {
   const vscode = acquireVsCodeApi();
   const [setData] = chart({ container });
-  const oldGraph: GraphData = { nodes: [], links: [] };
+  const oldGraph: GraphData = vscode.getState() ?? { nodes: [], links: [] };
 
   window.addEventListener('message', (ev) => {
     try {
@@ -182,7 +201,10 @@ if (container) {
         return;
       }
 
-      setData(Object.assign(oldGraph, message.payload));
+      const newGraph = Object.assign(oldGraph, message.payload); 
+      setData(newGraph);
+
+      vscode.setState(newGraph);
     } catch (e) {
       console.error(e);
     }

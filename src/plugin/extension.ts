@@ -23,9 +23,6 @@ export function activate(context: vscode.ExtensionContext) {
 		const fileRelationList = await analyzer(fileDescList);
 		const panel = TopologyPanel.getInstance(context);
 
-		console.log(fileDescList);
-		console.log(fileRelationList);
-
 		panel.setGraphData({ nodes: fileDescList, links: fileRelationList});
 
 		vscode.window.showInformationMessage('dependency analyze completed');
