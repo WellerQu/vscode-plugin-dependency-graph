@@ -8,8 +8,8 @@ import {
   forceCenter,
   ForceLink
 } from "d3-force";
-import { scaleOrdinal } from "d3-scale";
-import { schemeTableau10 } from "d3-scale-chromatic";
+import { scaleOrdinal, scaleSequential } from "d3-scale";
+import { schemeTableau10, interpolateWarm } from "d3-scale-chromatic";
 import { zoom, zoomIdentity } from "d3-zoom";
 
 // eslint-disable-next-line
@@ -190,7 +190,7 @@ const chart = (options: Options) => {
           .text(d => d.path.split("/").slice(-1)[0]);
         return group;
       },
-      update => update.attr("fill", d => colorScale(d.path)),
+      update => update.attr("fill", d => colorScale(d.ext)),
       exit => exit.remove()
     );
 
