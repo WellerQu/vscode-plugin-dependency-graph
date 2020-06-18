@@ -38,8 +38,8 @@ export const fileWalker = (dirname: string, options?: WalkerOptions): FileDesc[]
   }
 
   const filenames = fs.readdirSync(dirname)
-    .filter(isNotIgnoreFile(options?.ignore))
-    .map(filename => path.join(dirname, filename));
+    .map(filename => path.join(dirname, filename))
+    .filter(isNotIgnoreFile(options?.ignore));
 
   return filenames.reduce<FileDesc[]>((cum, fullName) => {
     return cum.concat(fileWalker(fullName, { ignore, dep }));

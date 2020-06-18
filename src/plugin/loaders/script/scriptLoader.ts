@@ -2,7 +2,7 @@ import { FileLoader, FileRelation } from "../../analyzer";
 import * as fs from 'fs';
 import * as path from 'path';
 
-const fillOptions = ['.ts', '.d.ts', '/index.ts'];
+const fillOptions = ['.ts', '.tsx', '.d.ts', '/index.ts'];
 
 export const scriptLoader: FileLoader = {
   test: /\.tsx?$/igm,
@@ -26,9 +26,11 @@ export const scriptLoader: FileLoader = {
         if (dependencyName.startsWith('.', 0)) {
           const dirname = path.dirname(fullName);
           const fullDependencyName = path.join(dirname, dependencyName);
-          const maybeName = fillOptions
+          const extname = path.extname(fullDependencyName); 
+          const maybeName = !extname ? fillOptions
             .map(ext => `${fullDependencyName}${ext}`)
-            .find(item => fs.existsSync(item));
+            .find(item => fs.existsSync(item))
+            : fullDependencyName;
 
           if (!maybeName) {
             continue;

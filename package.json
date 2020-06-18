@@ -1,7 +1,7 @@
 {
 	"name": "dependency-analyzer",
 	"displayName": "DependencyAnalyzer",
-	"description": "visualization the dependencies of source code file",
+	"description": "the dependencies visualization of the source code file",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.45.0"
@@ -19,7 +19,18 @@
 				"command": "extension.dependency-analyze",
 				"title": "Dependency analyze"
 			}
-		]
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Dependency analyzer configurations",
+			"properties": {
+				"dependencyAnalyzer.ignores": {
+					"type": "string",
+					"default": "node_modules|\/\\..+|(\\.map)$|build\/",
+					"description": "the RegExp for ignore some files"
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run build && npm run compile",

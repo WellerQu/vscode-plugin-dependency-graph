@@ -14,12 +14,19 @@ export function activate(context: vscode.ExtensionContext) {
 	const analyzer = fileAnalyzer([scriptLoader]);
 
 	const disposable = vscode.commands.registerCommand('extension.dependency-analyze', async () => {
-		const rootPath = vscode.workspace.workspaceFolders;
-		if (!rootPath || rootPath.length < 1) {
+		const workspaceFolders = vscode.workspace.workspaceFolders;
+		if (!workspaceFolders || workspaceFolders.length < 1) {
 			return;
 		}
 
-		const fileDescList = fileWalker(rootPath[0].uri.path, { ignore: /node_modules|^\..+/gim, dep: MAX_DEP });
+		const configurations = vscode.workspace.getConfiguration('dependencyAnalyzer');
+		const ignores = configurations.get<string>('ignores');
+		const options = {
+			ignore: ignores ? new RegExp(ignores, 'gim') : undefined,
+			dep: MAX_DEP
+		};
+
+		const fileDescList = fileWalker(workspaceFolders[0].uri.path, options);
 		const fileRelationList = await analyzer(fileDescList);
 		const panel = TopologyPanel.getInstance(context);
 
