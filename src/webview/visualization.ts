@@ -8,8 +8,8 @@ import {
   forceCenter,
   ForceLink
 } from "d3-force";
-import { scaleOrdinal, scaleSequential } from "d3-scale";
-import { schemeTableau10, interpolateWarm } from "d3-scale-chromatic";
+import { scaleOrdinal } from "d3-scale";
+import { schemeTableau10 } from "d3-scale-chromatic";
 import { zoom, zoomIdentity } from "d3-zoom";
 
 // eslint-disable-next-line
@@ -42,6 +42,7 @@ interface Options {
 const chart = (options: Options) => {
   const width = 800;
   const height = 600;
+  const container = options.container;
 
   const handleZoomed = () => {
     selection
@@ -222,9 +223,13 @@ const chart = (options: Options) => {
 };
 
 
-const container = document.querySelector("#chart") as HTMLDivElement | undefined;
+~function() {
+  const container = document.querySelector("#chart") as HTMLDivElement | undefined;
 
-if (container) {
+  if (!container) {
+    return;
+  }
+
   const vscode = acquireVsCodeApi();
   const [setData] = chart({ container });
   const oldGraph: GraphData = vscode.getState() ?? { nodes: [], links: [] };
@@ -232,11 +237,11 @@ if (container) {
   window.addEventListener("message", (ev) => {
     try {
       const message = ev.data as { type: string, payload: GraphData };
-      if (message.type !== "data")  {
+      if (message.type !== "data") {
         return;
       }
 
-      const newGraph = Object.assign(oldGraph, message.payload); 
+      const newGraph = Object.assign(oldGraph, message.payload);
       setData(newGraph);
 
       vscode.setState(newGraph);
@@ -250,4 +255,4 @@ if (container) {
   });
 
   vscode.postMessage({ type: "notify", payload: "ready" });
-}
+}();

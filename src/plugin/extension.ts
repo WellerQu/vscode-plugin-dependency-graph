@@ -6,12 +6,13 @@ import { fileWalker } from './fileWalker';
 import { fileAnalyzer } from './analyzer';
 
 import { scriptLoader } from './loaders/script/scriptLoader';
+import { cssLoader } from './loaders/stylesheet/cssLoader';
 
 // 默认遍历目录最大深度
 const MAX_DEP = 6;
 
 export function activate(context: vscode.ExtensionContext) {
-	const analyzer = fileAnalyzer([scriptLoader]);
+	const analyzer = fileAnalyzer([scriptLoader, cssLoader]);
 
 	const disposable = vscode.commands.registerCommand('extension.dependency-analyze', async () => {
 		const workspaceFolders = vscode.workspace.workspaceFolders;

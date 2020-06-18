@@ -7,7 +7,7 @@ export interface FileRelation {
 
 export interface FileLoader {
   test: RegExp,
-  analyze: (fullName: string) => Promise<FileRelation[]>
+  analyze: (fullName: string) => Thenable<FileRelation[]>
 }
 
 export const fileAnalyzer = (loaders: FileLoader[]) => (fileDescList: FileDesc[]): Promise<FileRelation[]> => {
