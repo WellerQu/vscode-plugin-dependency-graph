@@ -2,7 +2,7 @@ import { FileLoader, FileRelation } from "../../analyzer";
 import * as fs from 'fs';
 import * as path from 'path';
 
-const fillOptions = ['.ts', '.tsx', '.d.ts', '/index.ts'];
+const fillOptions = ['.ts', '.tsx', '.d.ts', '/index.ts', '/index.d.ts', '.js', '.jsx', '/index.js'];
 
 export const scriptLoader: FileLoader = {
   test: /\.tsx?$/igm,
