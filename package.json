@@ -24,10 +24,15 @@
 			"type": "object",
 			"title": "Dependency analyzer configurations",
 			"properties": {
-				"dependencyAnalyzer.ignores": {
+				"dependencyAnalyzer.include": {
 					"type": "string",
-					"default": "node_modules|\/\\..+|(\\.map)$|build\/",
-					"description": "the RegExp for ignore some files"
+					"default": "\\/src",
+					"description": "the RegExp for include some files"
+				},
+				"dependencyAnalyzer.exclude": {
+					"type": "string",
+					"default": "node_modules|\/\\..+",
+					"description": "the RegExp for exclude some files"
 				}
 			}
 		}

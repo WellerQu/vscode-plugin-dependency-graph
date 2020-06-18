@@ -45,11 +45,12 @@ const chart = (options: Options) => {
   const container = options.container;
 
   const handleZoomed = () => {
+    const transform = selection.event.transform;
     selection
       .select(container)
       .select("svg")
       .select("g.root")
-      .attr("transform", selection.event.transform);
+      .attr("transform", transform);
   };
 
   const svgZoom = zoom()
@@ -222,13 +223,15 @@ const chart = (options: Options) => {
   return [setData, setOptions, dispose];
 };
 
-
 ~function() {
   const container = document.querySelector("#chart") as HTMLDivElement | undefined;
 
   if (!container) {
     return;
   }
+
+  // clear waiting info
+  container.innerHTML = '';
 
   const vscode = acquireVsCodeApi();
   const [setData] = chart({ container });

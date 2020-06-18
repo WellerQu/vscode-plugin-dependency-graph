@@ -8,21 +8,31 @@ export interface FileDesc {
 }
 
 export interface WalkerOptions {
-  ignore?: RegExp,
+  include?: RegExp
+  exclude?: RegExp
   dep?: number
 }
 
-const isNotIgnoreFile = (regexp?: RegExp) => (filename: string) => {
+const isIncludeFile = (regexp?: RegExp) => (filename: string) => {
   if (!regexp) {
     return true;
   }
 
-  return !(filename.match(regexp)); 
+  return (filename.match(regexp)); 
+};
+
+const isExcludeFile = (regexp?: RegExp) => (filename: string) => {
+  if (!regexp) {
+    return true;
+  }
+
+  return !(filename.match(regexp));  
 };
 
 export const fileWalker = (dirname: string, options?: WalkerOptions): FileDesc[] => {
   const dep = options?.dep ? options.dep - 1 : 6;
-  const ignore = options?.ignore;
+  const exclude = options?.exclude;
+  const include = options?.include;
 
   if (dep < 0) {
     return [];
@@ -39,9 +49,10 @@ export const fileWalker = (dirname: string, options?: WalkerOptions): FileDesc[]
 
   const filenames = fs.readdirSync(dirname)
     .map(filename => path.join(dirname, filename))
-    .filter(isNotIgnoreFile(options?.ignore));
+    .filter(isExcludeFile(exclude))
+    .filter(isIncludeFile(include));
 
   return filenames.reduce<FileDesc[]>((cum, fullName) => {
-    return cum.concat(fileWalker(fullName, { ignore, dep }));
+    return cum.concat(fileWalker(fullName, { exclude, include, dep }));
   }, []);
 };

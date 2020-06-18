@@ -16,7 +16,7 @@ export const scriptLoader: FileLoader = {
       });
     }).then(content => {
       const relations: FileRelation[] = [];
-      const regexp = /^(?!\/\/)(?:.*?(?:from |require|import\()['"])(?<dep>[^'"]+)/gim;
+      const regexp = /^(?!\/\/)(?:.*?(?:from|require|import)\s*\(?\s*['"])(?<dep>[^'"]+)/gim;
 
       let matches: RegExpExecArray | null;
       while ((matches = regexp.exec(content)) !== null && matches.groups) {

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { TopologyPanel } from './TopologyPanel';
 
-import { fileWalker } from './fileWalker';
+import { fileWalker, WalkerOptions } from './fileWalker';
 import { fileAnalyzer } from './analyzer';
 
 import { scriptLoader } from './loaders/script/scriptLoader';
@@ -21,9 +21,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		const configurations = vscode.workspace.getConfiguration('dependencyAnalyzer');
-		const ignores = configurations.get<string>('ignores');
-		const options = {
-			ignore: ignores ? new RegExp(ignores, 'gim') : undefined,
+		const include = configurations.get<string>('include');
+		const exclude = configurations.get<string>('exclude');
+		const options: WalkerOptions = {
+			include: include ? new RegExp(include, 'gim') : undefined,
+			exclude: exclude ? new RegExp(exclude, 'gim') : undefined,
 			dep: MAX_DEP
 		};
 
