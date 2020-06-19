@@ -1,4 +1,5 @@
 import { FileDesc } from "./fileWalker";
+import * as fs from 'fs';
 
 export interface FileRelation {
   source: string;
@@ -6,19 +7,31 @@ export interface FileRelation {
 }
 
 export interface FileLoader {
-  test: RegExp,
-  analyze: (fullName: string, scope?: string) => Thenable<FileRelation[]>
+  test: RegExp;
+  analyze: (fullPath: string, sourceCode: string, scope: string) => FileRelation[];
 }
 
-export const fileAnalyzer = (loaders: FileLoader[]) => (fileDescList: FileDesc[], scope?: string): Promise<FileRelation[]> => {
-  return Promise.all(fileDescList.map(cur => {
-    const analyzer = loaders.find(item => cur.path.match(item.test));
-    if (!analyzer) {
-      return Promise.resolve([]);
-    }
+function createReadPromise(file: FileDesc): Promise<[FileDesc, string]> {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file.path, { encoding: 'utf-8' }, (err, content) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve([file, content]);
+    });
+  });
+}
 
-    return analyzer.analyze(cur.path, scope);
-  })).then((results: FileRelation[][]) => {
-    return results.reduce<FileRelation[]>((cum, cur) => cum.concat(cur), []);
+export const fileAnalyzer = (loaders: FileLoader[]) => (fileDescList: FileDesc[], scope: string): Promise<FileRelation[]> => {
+  const fileReadPromises: Promise<[FileDesc, string]>[] = fileDescList
+    .map(createReadPromise);
+  
+  return Promise.all(fileReadPromises)
+    .then((results: [FileDesc, string][]) =>{
+      return results.reduce<FileRelation[]>((cum, [file, sourceCode]) => {
+        return cum.concat(loaders.reduce<FileRelation[]>((relations, loader) => {
+          return relations.concat(file.path.match(loader.test) ? loader.analyze(file.path, sourceCode, scope) : []);
+        }, []));
+      }, []);
   });
 };

@@ -204,6 +204,7 @@ const chart = (options: Options) => {
         .append("polyline")
         .attr("stroke-width", 1.5)
         .attr("stroke", "#bababa")
+        .attr("fill", "transparent")
         .attr("marker-mid", "url(#Triangle)");
       return line;
     });
