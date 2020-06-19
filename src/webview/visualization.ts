@@ -134,7 +134,10 @@ const chart = (options: Options) => {
 
   const setData = (graph: GraphData) => {
     const nodes = graph.nodes.map<Node>(d => Object.create(d));
-    const links = graph.links.map(d => Object.create(d));
+    const links = graph.links.map<Link>(d => Object.create(d));
+
+    console.log(nodes, links);
+
     const { container } = options;
     const width = container.offsetWidth;
     const height = container.offsetHeight;

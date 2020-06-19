@@ -20,17 +20,21 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
+		const cwd = workspaceFolders[0].uri.path;
+
 		const configurations = vscode.workspace.getConfiguration('dependencyAnalyzer');
 		const include = configurations.get<string>('include');
 		const exclude = configurations.get<string>('exclude');
+
 		const options: WalkerOptions = {
 			include: include ? new RegExp(include, 'gim') : undefined,
 			exclude: exclude ? new RegExp(exclude, 'gim') : undefined,
 			dep: MAX_DEP
 		};
 
-		const fileDescList = fileWalker(workspaceFolders[0].uri.path, options);
-		const fileRelationList = await analyzer(fileDescList);
+		const fileDescList = fileWalker(cwd, options);
+		const fileRelationList = await analyzer(fileDescList, cwd);
+
 		const panel = TopologyPanel.getInstance(context);
 
 		panel.setGraphData({ nodes: fileDescList, links: fileRelationList});
