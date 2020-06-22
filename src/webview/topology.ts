@@ -8,9 +8,10 @@ import {
   forceCenter,
   ForceLink
 } from "d3-force";
-import { scaleOrdinal } from "d3-scale";
+import { scaleOrdinal, scaleLinear } from "d3-scale";
 import { schemeTableau10 } from "d3-scale-chromatic";
 import { zoom, zoomIdentity } from "d3-zoom";
+import { extent, mean } from 'd3-array';
 
 export interface Node extends SimulationNodeDatum {
   path: string;
@@ -71,7 +72,7 @@ export const chart = (options: Options) => {
         .attr("markerHeight", 6)
         .attr("orient", "auto")
         .append("path")
-        .attr("fill", "#bababa")
+        .attr("fill", "#434343")
         .attr("d", "M 0 0 L 10 5 L 0 10 z");
 
       svg.append("g").attr("class", "topology");
@@ -139,6 +140,8 @@ export const chart = (options: Options) => {
     const height = container.offsetHeight;
     const extname = Array.from(new Set(nodes.map(item => item.ext)));
     const colorScale = scaleOrdinal<string>().domain(extname).range(schemeTableau10);
+    const [min, max] = extent(nodes, (d) => d.size);
+    const radiusScale = scaleLinear().domain([min, mean([min, max]), max]).range([10, 15, 20]);
 
     // const map = rollup(nodes, d => d.length, d => d.ext);   
     // const entries = Object.assign<{[key]({}, map);
@@ -178,7 +181,7 @@ export const chart = (options: Options) => {
         const group = enter.append("g").attr("class", "node");
         group
           .append("circle")
-          .attr("r", 10)
+          .attr("r", d => radiusScale(d.size))
           .attr("stroke", "white")
           .attr("stroke-width", 2)
           .attr("fill", d => colorScale(d.ext));
@@ -204,7 +207,7 @@ export const chart = (options: Options) => {
       const line = enter
         .append("polyline")
         .attr("stroke-width", 1.5)
-        .attr("stroke", "#bababa")
+        .attr("stroke", "#434343")
         .attr("fill", "transparent")
         .attr("marker-mid", "url(#Triangle)");
       return line;

@@ -1,5 +1,14 @@
 import { chart as topology, GraphData } from './topology';
 
+// eslint-disable-next-line
+declare interface vscode {
+  postMessage(message: any): void
+  setState(state: object): void
+  getState<T extends object>(): T
+}
+
+declare function acquireVsCodeApi(): vscode;
+
 const container = document.querySelector("#chart") as HTMLDivElement | undefined;
 // clear waiting info
 container.innerHTML = '';
