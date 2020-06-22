@@ -9,6 +9,7 @@ import { typescriptLoader } from './loaders/script/typescriptLoader';
 import { javascriptLoader } from './loaders/script/javascriptLoader';
 import { vueLoader } from './loaders/script/vueLoader';
 import { cssLoader } from './loaders/stylesheet/cssLoader';
+import { getCurrentWorkspaceDir } from './runControl';
 
 // 默认遍历目录最大深度
 const MAX_DEP = 6;
@@ -40,15 +41,10 @@ export class TopologyPanel extends Panel {
       TopologyPanel.instance = undefined;
     }, null, this.context.subscriptions);
 
-    this.panel.webview.onDidReceiveMessage(async (ev) => {
+    this.panel.webview.onDidReceiveMessage((ev) => {
       const message = ev as { type: string, payload: any };
       if (message.type === 'topology') {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length < 1) {
-          return;
-        }
-
-        const cwd = workspaceFolders[0].uri.path;
+        const cwd = getCurrentWorkspaceDir();
 
         const configurations = vscode.workspace.getConfiguration('dependencyAnalyzer');
         const include = configurations.get<string>('include');
@@ -60,11 +56,19 @@ export class TopologyPanel extends Panel {
           dep: MAX_DEP
         };
 
-        const fileDescList = fileWalker(cwd, options);
-        const fileRelationList = await analyzer(fileDescList, cwd);
+        const analyze = async () => {
+          const fileDescList = fileWalker(cwd, options);
+          const fileRelationList = await analyzer(fileDescList, cwd);
 
-        this.panel.webview.postMessage({ type: 'topology-data', payload: { nodes: fileDescList, links: fileRelationList } });
-        vscode.window.showInformationMessage('dependency analyze completed');
+          this.panel.webview.postMessage({ 
+            type: 'topology-data', 
+            payload: { nodes: fileDescList, links: fileRelationList } 
+          });
+
+          vscode.window.showInformationMessage('dependency analyze completed');
+        };
+
+        analyze();
       }
 
     }, null, this.context.subscriptions);
