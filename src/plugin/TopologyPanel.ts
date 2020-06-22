@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { Panel } from './Panel';
-import { FileDesc } from './fileWalker';
 
 import { fileWalker, WalkerOptions } from './fileWalker';
 import { fileAnalyzer } from './analyzer';
