@@ -14,10 +14,18 @@ export function getCurrentWorkspaceDir() {
 export function controls() {
   const cwd = getCurrentWorkspaceDir();
   const rcFilePath = `${cwd}/.deprc`;
+
   if (!fs.existsSync(rcFilePath)) {
     return;
   }
 
-  const rcContent = fs.readFileSync(rcFilePath, { encoding: 'utf-8' });
-  const cfg = JSON.parse(rcContent);
+  try {
+    const rcContent = fs.readFileSync(rcFilePath, { encoding: 'utf-8' }) ?? '{}';
+    const cfg = JSON.parse(rcContent);
+
+    console.log(cfg);
+  }
+  catch(e) {
+    console.error(e);
+  }
 }
