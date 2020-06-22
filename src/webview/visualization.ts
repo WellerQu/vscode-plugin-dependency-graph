@@ -11,6 +11,8 @@ import {
 import { scaleOrdinal } from "d3-scale";
 import { schemeTableau10 } from "d3-scale-chromatic";
 import { zoom, zoomIdentity } from "d3-zoom";
+import { rollup } from 'd3-array';
+import { stack } from 'd3-shape';
 
 // eslint-disable-next-line
 interface vscode {
@@ -49,7 +51,7 @@ const chart = (options: Options) => {
     selection
       .select(container)
       .select("svg")
-      .select("g.root")
+      .select("g.topology")
       .attr("transform", transform);
   };
 
@@ -83,15 +85,20 @@ const chart = (options: Options) => {
         .attr("fill", "#bababa")
         .attr("d", "M 0 0 L 10 5 L 0 10 z");
 
-      return svg.append("g").attr("class", "root");
+      svg.append("g").attr("class", "topology");
+      svg.append("g").attr("class", "stack");
+
+      return svg;
     });
 
   let link = svg
+    .select('g.topology')
     .append("g")
     .attr("class", "links")
     .selectAll<SVGPolylineElement, Link>("polyline");
 
   let node = svg
+    .select('g.topology')
     .append("g")
     .attr("class", "nodes")
     .selectAll<SVGGElement, Node>("g.node");
@@ -143,6 +150,11 @@ const chart = (options: Options) => {
     const height = container.offsetHeight;
     const extname = Array.from(new Set(nodes.map(item => item.ext)));
     const colorScale = scaleOrdinal<string>().domain(extname).range(schemeTableau10);
+
+    // const map = rollup(nodes, d => d.length, d => d.ext);   
+    // const entries = Object.assign<{[key]({}, map);
+    // const stackGenerator = stack().keys(extname).value(d => d[1]);
+    // stackGenerator(entries)
 
     selection
       .select(container)
